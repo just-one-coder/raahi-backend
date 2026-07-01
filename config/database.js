@@ -11,6 +11,8 @@ const pool = mysql.createPool({
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+  enableKeepAlive: true,
+  keepAliveInitialDelay: 0,
   // Cloud databases usually require SSL. 
   // This turns SSL on if you aren't on localhost.
   ssl: process.env.DB_HOST !== 'localhost' ? { rejectUnauthorized: false } : false
