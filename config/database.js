@@ -6,10 +6,14 @@ const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || '',
+  port: process.env.DB_PORT || 3306,
   database: process.env.DB_NAME || 'raahi_db',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  // Cloud databases usually require SSL. 
+  // This turns SSL on if you aren't on localhost.
+  ssl: process.env.DB_HOST !== 'localhost' ? { rejectUnauthorized: false } : false
 });
 
 // Convert pool to use promises
