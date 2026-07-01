@@ -9,17 +9,23 @@ const JWT_SECRET = process.env.JWT_SECRET || 'raahi_secret_key';
 
 // Signup Route (MySQL)
 router.post('/signup', async (req, res) => {
-  const {
-    username,
-    email,
-    password,
-    phone_number,
-    date_of_birth,
-    validation_proof_type,
-    proof_id_number,
-    address,
-    preferences
-  } = req.body;
+  const [result] = await pool.execute(
+      `INSERT INTO user_details 
+       (username, password_key, email, phone_number, date_of_birth, 
+        validation_proof_type, proof_id_number, address, preferences, created_at) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      [
+        username,
+        hashedPassword,
+        email,
+        phone_number || null,           // FIX: Converts "" to null
+        date_of_birth || null,          // FIX: Converts "" to null
+        validation_proof_type || null,  // FIX: Converts "" to null
+        proof_id_number || null,        // FIX: Converts "" to null
+        address || null,                // FIX: Converts "" to null
+        JSON.stringify(preferences || {})
+      ]
+    );
 
   try {
     // Check if user already exists
