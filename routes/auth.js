@@ -7,55 +7,6 @@ const router = express.Router();
 // JWT Secret
 const JWT_SECRET = process.env.JWT_SECRET || 'raahi_secret_key';
 
-// Add this in auth.js before module.exports = router;
-
-router.put('/profile', authenticateToken, async (req, res) => {
-  const { 
-    username, email, dateOfBirth, 
-    ...preferencesData // Groups bio, location, and all travel preferences together
-  } = req.body;
-
-  try {
-    // 1. Fetch existing preferences to merge with new ones
-    const [existingUsers] = await pool.execute(
-      'SELECT preferences FROM user_details WHERE user_id = ?',
-      [req.user.user_id]
-    );
-
-    if (existingUsers.length === 0) {
-      return res.status(404).json({ success: false, message: 'User not found' });
-    }
-
-    const currentPreferences = typeof existingUsers[0].preferences === 'string' 
-      ? JSON.parse(existingUsers[0].preferences || '{}') 
-      : (existingUsers[0].preferences || {});
-
-    const updatedPreferences = { ...currentPreferences, ...preferencesData };
-
-    // 2. Update the database
-    await pool.execute(
-      `UPDATE user_details 
-       SET username = ?, email = ?, date_of_birth = ?, preferences = ? 
-       WHERE user_id = ?`,
-      [
-        username, 
-        email, 
-        dateOfBirth || null, 
-        JSON.stringify(updatedPreferences), 
-        req.user.user_id
-      ]
-    );
-
-    res.json({
-      success: true,
-      message: 'Profile updated successfully'
-    });
-  } catch (error) {
-    console.error('Profile update error:', error);
-    res.status(500).json({ success: false, message: 'Server error updating profile' });
-  }
-});
-
 // Signup Route (MySQL)
 router.post('/signup', async (req, res) => {
   const {
@@ -253,6 +204,54 @@ router.get('/profile', authenticateToken, async (req, res) => {
       success: false,
       message: 'Server error'
     });
+  }
+});
+
+// Profile Update Route
+router.put('/profile', authenticateToken, async (req, res) => {
+  const { 
+    username, email, dateOfBirth, 
+    ...preferencesData // Groups bio, location, and all travel preferences together
+  } = req.body;
+
+  try {
+    // 1. Fetch existing preferences to merge with new ones
+    const [existingUsers] = await pool.execute(
+      'SELECT preferences FROM user_details WHERE user_id = ?',
+      [req.user.user_id]
+    );
+
+    if (existingUsers.length === 0) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    const currentPreferences = typeof existingUsers[0].preferences === 'string' 
+      ? JSON.parse(existingUsers[0].preferences || '{}') 
+      : (existingUsers[0].preferences || {});
+
+    const updatedPreferences = { ...currentPreferences, ...preferencesData };
+
+    // 2. Update the database
+    await pool.execute(
+      `UPDATE user_details 
+       SET username = ?, email = ?, date_of_birth = ?, preferences = ? 
+       WHERE user_id = ?`,
+      [
+        username, 
+        email, 
+        dateOfBirth || null, 
+        JSON.stringify(updatedPreferences), 
+        req.user.user_id
+      ]
+    );
+
+    res.json({
+      success: true,
+      message: 'Profile updated successfully'
+    });
+  } catch (error) {
+    console.error('Profile update error:', error);
+    res.status(500).json({ success: false, message: 'Server error updating profile' });
   }
 });
 
